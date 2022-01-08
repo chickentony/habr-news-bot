@@ -1,0 +1,7 @@
+python-telegram-bot==13.10
+pytest~=6.2.5
+pytest-cov==3.0.0
+pylint==2.11.1
+PyYAML==6.0
+requests==2.26.0
+beautifulsoup4==4.10.0
