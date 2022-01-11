@@ -1,8 +1,10 @@
-from typing import List
+from typing import List, Union
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+
+from app.article import Article
 
 HABR_BASE_URL = 'https://habr.com'
 
@@ -20,7 +22,7 @@ def get_habr_articles_html(url: str):
     return html_data
 
 
-def parse_habr_articles_content(html_data: str) -> List[List[str]]:
+def parse_habr_articles_content(html_data: str) -> Union[list, List[Article]]:
     if not isinstance(html_data, str):
         raise ValueError
     result_articles_list = []
@@ -42,12 +44,9 @@ def parse_habr_articles_content(html_data: str) -> List[List[str]]:
         article_snippet_text = article_snippet.find(
             'div', attrs={'class': 'tm-article-body tm-article-snippet__lead'}
         ).get_text()
-        result_articles_list.append(
-            [
-                article_title,
-                article_snippet_text,
-                f'{HABR_BASE_URL}{article_link}'
-            ]
+        new_article = Article.build_from_list(
+            [article_title, article_snippet_text, f'{HABR_BASE_URL}{article_link}']
         )
+        result_articles_list.append(new_article)
 
     return result_articles_list
