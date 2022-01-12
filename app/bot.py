@@ -35,20 +35,20 @@ class Bot:
         html_data = get_habr_articles_html(context.job.context['url'])
         articles = parse_habr_articles_content(html_data)
         message = prepare_message_for_telegram(articles)
-        print(message)
+        # print(message)
         context.bot.send_message(chat_id=context.job.context['chat_id'], text=message)
 
     @staticmethod
     def get_daily_news(update: Update, context: CallbackContext) -> None:
-        # arg_list = context.args
-        args_dict = {
+        # command_args = context.args
+        context_args_dict = {
             'chat_id': update.effective_chat.id,
             'url': 'https://habr.com/ru/hub/python/'
         }
         context.job_queue.run_repeating(
             Bot.process_habr_articles_parsing,
-            interval=5,
-            context=args_dict
+            interval=30,
+            context=context_args_dict
         )
 
     def start_bot(self) -> None:

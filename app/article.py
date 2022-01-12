@@ -3,10 +3,11 @@ from typing import List
 
 
 class Article:
-    def __init__(self, title: str, snippet: str, link: str):
+    def __init__(self, title: str, link: str, votes: str, views: str):
         self.title = title
-        self.snippet = snippet
         self.link = link
+        self.votes = votes
+        self.views = views
 
     @classmethod
     def build_from_list(cls, article_fields: list) -> Article:
@@ -15,21 +16,23 @@ class Article:
         if not article_fields:
             raise ValueError
         article_title = article_fields[0]
-        article_snippet = article_fields[1]
-        article_link = article_fields[2]
+        article_link = article_fields[1]
+        articles_votes = article_fields[2]
+        articles_views = article_fields[3]
 
-        article = cls(article_title, article_snippet, article_link)
+        article = cls(article_title, article_link, articles_votes, articles_views)
         return article
 
     def __repr__(self):
-        _repr = f'{self.__class__.__name__}({self.title}, {self.snippet}, {self.link})'
+        _repr = f'{self.__class__.__name__}({self.title}, {self.link}, {self.votes}, {self.views})'
         return _repr
 
     def __eq__(self, other: Article):
         outcome = (
                 self.title == other.title
-                and self.snippet == other.snippet
                 and self.link == other.link
+                and self.votes == other.votes
+                and self.views == other.views
         )
         return outcome
 
@@ -37,6 +40,8 @@ class Article:
 def prepare_message_for_telegram(articles_list: List[Article]) -> str:
     result_message = ''
     for article in articles_list:
-        message_text = f'{article.title} {article.link}\n{article.snippet}\n'
+        message_text = f'{article.title}({article.link})\n' \
+                       f'Количество голосов: {article.votes}\n' \
+                       f'Количество просмотров: {article.views}\n\n'
         result_message += message_text
     return result_message

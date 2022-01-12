@@ -6,15 +6,35 @@ from app.article import Article, prepare_message_for_telegram
 @pytest.fixture(scope='function')
 def articles_fixture():
     articles = [
-        Article('test title', 'some text for snippet', 'some link'),
-        Article('test title 2', 'some text for snippet', 'some link')
+        Article(
+            'Эпические баги прошлого',
+            'https://habr.com/ru/post/645133/',
+            'Всего голосов 26: ↑25 и ↓1  +24',
+            'Просмотры  6.6K'
+        ),
+        Article(
+            'Мониторинг системы мониторинга, или Жизнь внутри индекса',
+            'https://habr.com/ru/company/oleg-bunin/blog/599761/',
+            'Всего голосов 20: ↑19 и ↓1  +18',
+            'Просмотры  2K'
+        )
     ]
     return articles
 
 
 def test_build_from_list_can_create_new_article():
-    expected_result = Article('test', 'some text for snippet', 'some link')
-    test_data = ['test', 'some text for snippet', 'some link']
+    expected_result = Article(
+        'Эпические баги прошлого',
+        'https://habr.com/ru/post/645133/',
+        'Всего голосов 26: ↑25 и ↓1  +24',
+        'Просмотры  6.6K'
+    )
+    test_data = [
+        'Эпические баги прошлого',
+        'https://habr.com/ru/post/645133/',
+        'Всего голосов 26: ↑25 и ↓1  +24',
+        'Просмотры  6.6K'
+    ]
 
     article = Article.build_from_list(test_data)
 
@@ -42,9 +62,13 @@ def test_build_from_list_raise_exception_if_empty_list_arg_provided():
 
 
 def test_prepare_message_for_telegram_can_aggregate_article_info_for_message(articles_fixture):
-    expected_result = 'test title some link\nsome text for snippet\n' \
-                      'test title 2 some link\nsome text for snippet\n'
-
+    expected_result = 'Эпические баги прошлого(https://habr.com/ru/post/645133/)\n' \
+                      'Количество голосов: Всего голосов 26: ↑25 и ↓1  +24\n' \
+                      'Количество просмотров: Просмотры  6.6K\n\n' \
+                      'Мониторинг системы мониторинга, или Жизнь внутри индекса' \
+                      '(https://habr.com/ru/company/oleg-bunin/blog/599761/)\n' \
+                      'Количество голосов: Всего голосов 20: ↑19 и ↓1  +18\n' \
+                      'Количество просмотров: Просмотры  2K\n\n'
     result = prepare_message_for_telegram(articles_fixture)
 
     assert expected_result == result

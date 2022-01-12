@@ -1,8 +1,7 @@
 from typing import List, Union
 
+import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 
 from app.article import Article
 
@@ -12,13 +11,13 @@ HABR_BASE_URL = 'https://habr.com'
 def get_habr_articles_html(url: str):
     if not isinstance(url, str):
         raise ValueError
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    driver = webdriver.Chrome(options=chrome_options)
 
-    driver.get(url)
-    html_data = driver.page_source
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException:
+        raise ConnectionError
+
+    html_data = response.text
     return html_data
 
 
@@ -41,11 +40,17 @@ def parse_habr_articles_content(html_data: str) -> Union[list, List[Article]]:
         article_header = article_snippet.find('h2')
         article_title = article_header.find('a').get_text()
         article_link = article_header.find('a')['href']
-        article_snippet_text = article_snippet.find(
-            'div', attrs={'class': 'tm-article-body tm-article-snippet__lead'}
+        article_icons = article.find('div', attrs={'class': 'tm-data-icons'})
+        if not article_snippet:
+            continue
+        article_votes = article_icons.find(
+            'div', attrs={'class': 'tm-votes-meter tm-data-icons__item'}
+        ).get_text()
+        article_views = article_icons.find(
+            'span', attrs={'class': 'tm-icon-counter tm-data-icons__item'}
         ).get_text()
         new_article = Article.build_from_list(
-            [article_title, article_snippet_text, f'{HABR_BASE_URL}{article_link}']
+            [article_title, f'{HABR_BASE_URL}{article_link}', article_votes, article_views]
         )
         result_articles_list.append(new_article)
 
