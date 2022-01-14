@@ -62,10 +62,10 @@ def test_build_from_list_raise_exception_if_empty_list_arg_provided():
 
 
 def test_prepare_message_for_telegram_can_aggregate_article_info_for_message(articles_fixture):
-    expected_result = 'Эпические баги прошлого(https://habr.com/ru/post/645133/)\n' \
+    expected_result = '[Эпические баги прошлого](https://habr.com/ru/post/645133/)\n' \
                       'Количество голосов: Всего голосов 26: ↑25 и ↓1  +24\n' \
                       'Количество просмотров: Просмотры  6.6K\n\n' \
-                      'Мониторинг системы мониторинга, или Жизнь внутри индекса' \
+                      '[Мониторинг системы мониторинга, или Жизнь внутри индекса]' \
                       '(https://habr.com/ru/company/oleg-bunin/blog/599761/)\n' \
                       'Количество голосов: Всего голосов 20: ↑19 и ↓1  +18\n' \
                       'Количество просмотров: Просмотры  2K\n\n'

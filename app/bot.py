@@ -1,10 +1,30 @@
+from abc import ABC, abstractmethod
 import logging
 
 from telegram.ext import Updater, CallbackContext, CommandHandler
 from telegram import Update
+from telegram import ParseMode
 
 from app.articles_parser import parse_habr_articles_content, get_habr_articles_html
 from app.article import prepare_message_for_telegram
+
+HABR_BASE_URL = 'https://habr.com'
+HABR_QA_ARTICLES_URL = f'{HABR_BASE_URL}/ru/hub/it_testing/'
+
+
+class BotCommandStrategy(ABC):
+    @abstractmethod
+    def bot_command(self, update: Update, context: CommandHandler, url: str):
+        raise NotImplementedError
+
+
+class ReplayCommand(BotCommandStrategy):
+    @classmethod
+    def bot_command(cls, update: Update, context: CallbackContext, url: str) -> None:
+        html_data = get_habr_articles_html(url)
+        articles = parse_habr_articles_content(html_data)
+        message = prepare_message_for_telegram(articles)
+        update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
 
 
 class Bot:
@@ -31,29 +51,14 @@ class Bot:
         )
 
     @staticmethod
-    def process_habr_articles_parsing(context: CallbackContext):
-        html_data = get_habr_articles_html(context.job.context['url'])
-        articles = parse_habr_articles_content(html_data)
-        message = prepare_message_for_telegram(articles)
-        # print(message)
-        context.bot.send_message(chat_id=context.job.context['chat_id'], text=message)
-
-    @staticmethod
-    def get_daily_news(update: Update, context: CallbackContext) -> None:
-        # command_args = context.args
-        context_args_dict = {
-            'chat_id': update.effective_chat.id,
-            'url': 'https://habr.com/ru/hub/python/'
-        }
-        context.job_queue.run_repeating(
-            Bot.process_habr_articles_parsing,
-            interval=30,
-            context=context_args_dict
-        )
+    def get_daily_testing_articles(update: Update, context: CallbackContext) -> None:
+        ReplayCommand.bot_command(update, context, HABR_QA_ARTICLES_URL)
 
     def start_bot(self) -> None:
         self.dispatcher.add_handler(CommandHandler('start', self.start_command))
         self.dispatcher.add_handler(CommandHandler('help', self.help_command))
-        self.dispatcher.add_handler(CommandHandler('get_daily_news', self.get_daily_news))
+        self.dispatcher.add_handler(
+            CommandHandler('get_daily_testing_news', self.get_daily_testing_articles)
+        )
         self.updater.start_polling()
         self.updater.idle()

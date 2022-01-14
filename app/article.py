@@ -40,7 +40,7 @@ class Article:
 def prepare_message_for_telegram(articles_list: List[Article]) -> str:
     result_message = ''
     for article in articles_list:
-        message_text = f'{article.title}({article.link})\n' \
+        message_text = f'[{article.title}]({article.link})\n' \
                        f'Количество голосов: {article.votes}\n' \
                        f'Количество просмотров: {article.views}\n\n'
         result_message += message_text
