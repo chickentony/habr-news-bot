@@ -72,3 +72,67 @@ def test_prepare_message_for_telegram_can_aggregate_article_info_for_message(art
     result = prepare_message_for_telegram(articles_fixture)
 
     assert expected_result == result
+
+
+@pytest.mark.parametrize(
+    'title',
+    [
+        pytest.param(123, id='int'),
+        pytest.param(123.0, id='float'),
+        pytest.param([], id='list'),
+        pytest.param({}, id='dict'),
+        pytest.param((), id='tuple'),
+        pytest.param(None, id='None'),
+    ]
+)
+def test_create_article_raise_exception_if_not_str_title_param_provided(title):
+    with pytest.raises(ValueError):
+        Article(title, 'test link', 'test votes', 'test views')
+
+
+@pytest.mark.parametrize(
+    'link',
+    [
+        pytest.param(123, id='int'),
+        pytest.param(123.0, id='float'),
+        pytest.param([], id='list'),
+        pytest.param({}, id='dict'),
+        pytest.param((), id='tuple'),
+        pytest.param(None, id='None'),
+    ]
+)
+def test_create_article_raise_exception_if_not_str_link_param_provided(link):
+    with pytest.raises(ValueError):
+        Article('test title', link, 'test votes', 'test views')
+
+
+@pytest.mark.parametrize(
+    'votes',
+    [
+        pytest.param(123, id='int'),
+        pytest.param(123.0, id='float'),
+        pytest.param([], id='list'),
+        pytest.param({}, id='dict'),
+        pytest.param((), id='tuple'),
+        pytest.param(None, id='None'),
+    ]
+)
+def test_create_article_raise_exception_if_not_str_votes_param_provided(votes):
+    with pytest.raises(ValueError):
+        Article('test title', 'test link', votes, 'test views')
+
+
+@pytest.mark.parametrize(
+    'views',
+    [
+        pytest.param(123, id='int'),
+        pytest.param(123.0, id='float'),
+        pytest.param([], id='list'),
+        pytest.param({}, id='dict'),
+        pytest.param((), id='tuple'),
+        pytest.param(None, id='None'),
+    ]
+)
+def test_create_article_raise_exception_if_not_str_views_param_provided(views):
+    with pytest.raises(ValueError):
+        Article('test title', 'test link', 'test votes', views)

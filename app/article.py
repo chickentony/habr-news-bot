@@ -3,7 +3,10 @@ from typing import List
 
 
 class Article:
+    """Class with information about habr articles"""
     def __init__(self, title: str, link: str, votes: str, views: str):
+        if not all(isinstance(argument, str) for argument in (title, link, votes, views)):
+            raise ValueError
         self.title = title
         self.link = link
         self.votes = votes
