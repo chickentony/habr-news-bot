@@ -61,6 +61,11 @@ def test_build_from_list_raise_exception_if_empty_list_arg_provided():
         Article.build_from_list([])
 
 
+def test_build_from_list_raise_exception_if_invalid_arg_length_provided():
+    with pytest.raises(IndexError):
+        Article.build_from_list(['first element', 'second element', 'third element'])
+
+
 def test_prepare_message_for_telegram_can_aggregate_article_info_for_message(articles_fixture):
     expected_result = '[Эпические баги прошлого](https://habr.com/ru/post/645133/)\n' \
                       'Количество голосов: Всего голосов 26: ↑25 и ↓1  +24\n' \

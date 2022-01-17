@@ -4,11 +4,22 @@ import requests
 from bs4 import BeautifulSoup
 
 from app.article import Article
+from app.helpers import parse_config
 
 HABR_BASE_URL = 'https://habr.com'
+PATH_TO_CONFIG_FILE = 'config.yaml'
+config = parse_config(PATH_TO_CONFIG_FILE)
 
 
 def get_habr_articles_html(url: str):
+    """
+    Get page html from habr.
+
+    :raises ValueError if not sting param provided,
+    ConnectionError if external service not available
+    :param url: habr url
+    :return: page html
+    """
     if not isinstance(url, str):
         raise ValueError
 
@@ -22,6 +33,13 @@ def get_habr_articles_html(url: str):
 
 
 def parse_habr_articles_content(html_data: str) -> Union[list, List[Article]]:
+    """
+    Parse provided html BeautifulSoup lib. Find article title, link, votes and views.
+
+    :raise ValueError if not string param provided
+    :param html_data: habr page html
+    :return: list contains Article() classes
+    """
     if not isinstance(html_data, str):
         raise ValueError
     result_articles_list = []
@@ -50,7 +68,7 @@ def parse_habr_articles_content(html_data: str) -> Union[list, List[Article]]:
             'span', attrs={'class': 'tm-icon-counter tm-data-icons__item'}
         ).get_text()
         new_article = Article.build_from_list(
-            [article_title, f'{HABR_BASE_URL}{article_link}', article_votes, article_views]
+            [article_title, f"{config['habr_base_url']}{article_link}", article_votes, article_views]
         )
         result_articles_list.append(new_article)
 
