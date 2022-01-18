@@ -11,14 +11,14 @@ PATH_TO_CONFIG_FILE = 'config.yaml'
 config = parse_config(PATH_TO_CONFIG_FILE)
 
 
-def get_habr_articles_html(url: str):
+def get_habr_articles_html(url: str) -> str:
     """
-    Get page html from habr.
+    Get page HTML from habr.
 
     :raises ValueError if not sting param provided,
     ConnectionError if external service not available
     :param url: habr url
-    :return: page html
+    :return: HTML page
     """
     if not isinstance(url, str):
         raise ValueError
@@ -34,10 +34,11 @@ def get_habr_articles_html(url: str):
 
 def parse_habr_articles_content(html_data: str) -> Union[list, List[Article]]:
     """
-    Parse provided html BeautifulSoup lib. Find article title, link, votes and views.
+    Parse provided HTML page BeautifulSoup lib. Find article title, link, votes and views.
+    If on page no articles blocks return empty list.
 
     :raise ValueError if not string param provided
-    :param html_data: habr page html
+    :param html_data: habr HTML page
     :return: list contains Article() classes
     """
     if not isinstance(html_data, str):

@@ -12,14 +12,14 @@ HABR_EMPTY_ARTICLES_DUMP_FILEPATH = 'app/tests/tests_data/habr_empty_articles_du
 
 
 @pytest.fixture(scope='function')
-def habr_html_fixture() -> str:
+def habr_article_html_fixture() -> str:
     with open(HABR_ARTICLES_DUMP_FILEPATH, 'r') as fio:
         content = fio.read()
     return content
 
 
 @pytest.fixture(scope='function')
-def habr_empty_articles_html_fixture() -> str:
+def habr_empty_article_html_fixture() -> str:
     with open(HABR_EMPTY_ARTICLES_DUMP_FILEPATH, 'r') as fio:
         content = fio.read()
     return content
@@ -27,10 +27,16 @@ def habr_empty_articles_html_fixture() -> str:
 
 @pytest.mark.integration_test
 def test_get_habr_articles_html_can_get_html_page_from_website():
+    expected_word_in_search = 'python'
+
     html_content = get_habr_articles_html(HABR_URL_TO_PARSE)
 
-    assert 0 != len(html_content)
-    assert 'python' in html_content
+    assert 0 != len(html_content), (
+        f'Content length must be greater then 0'
+    )
+    assert expected_word_in_search in html_content, (
+        f'Searching word {expected_word_in_search} must be in result content'
+    )
 
 
 @patch('requests.get')
@@ -59,7 +65,9 @@ def test_get_habr_articles_html_raise_exception_if_not_str_param_provided(url):
         get_habr_articles_html(url)
 
 
-def test_parse_habr_articles_content_can_get_articles_data_from_html_content(habr_html_fixture):
+def test_parse_habr_articles_content_can_get_articles_data_from_html_content(
+        habr_article_html_fixture
+):
     expected_result = [
         Article('Эпические баги прошлого', 'https://habr.com/ru/post/645133/', 'Всего голосов 26: ↑25 и ↓1  +24', 'Просмотры  6.6K'),
         Article('Мониторинг системы мониторинга, или Жизнь внутри индекса', 'https://habr.com/ru/company/oleg-bunin/blog/599761/', 'Всего голосов 20: ↑19 и ↓1  +18', 'Просмотры  2K'),
@@ -81,17 +89,21 @@ def test_parse_habr_articles_content_can_get_articles_data_from_html_content(hab
         Article('Начало работы с Playwright (Часть 1)', 'https://habr.com/ru/post/597293/', 'Всего голосов 10: ↑9 и ↓1  +8', 'Просмотры  1.4K'),
         Article('QA Meeting Point 2021: тестирование BigData, развитие команды, тонкости работы с AI', 'https://habr.com/ru/company/dins/blog/597201/', 'Всего голосов 7: ↑6 и ↓1  +5', 'Просмотры  833')
     ]
-    result = parse_habr_articles_content(habr_html_fixture)
+    result = parse_habr_articles_content(habr_article_html_fixture)
 
-    assert expected_result == result
+    assert expected_result == result, (
+        f'Expected result: {expected_result} while yours: {result}'
+    )
 
 
 def test_parse_habr_articles_content_return_empty_list_if_no_articles_found(
-        habr_empty_articles_html_fixture
+        habr_empty_article_html_fixture
 ):
-    result = parse_habr_articles_content(habr_empty_articles_html_fixture)
+    result = parse_habr_articles_content(habr_empty_article_html_fixture)
 
-    assert [] == result
+    assert [] == result, (
+        f'Empty list expected while yours result: {result}'
+    )
 
 
 @pytest.mark.parametrize(

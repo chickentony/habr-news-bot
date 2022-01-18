@@ -7,7 +7,7 @@ class Article:
 
     def __init__(self, title: str, link: str, votes: str, views: str):
         """
-        Init class with provided params.
+        Init class instance with provided params.
 
         :raise ValueError if not string params provided
         :param title: article title

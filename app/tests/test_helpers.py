@@ -10,8 +10,12 @@ def test_parse_config_can_parse_config_file():
 
     result = parse_config(TESTING_CONFIG_FILEPATH)
 
-    assert 0 != len(result)
-    assert expected_value == result['value']
+    assert 0 != len(result), (
+        f'Content length must be greater then 0'
+    )
+    assert expected_value == result['value'], (
+        f'Expected value {expected_value} must be in config {result}'
+    )
 
 
 @pytest.mark.parametrize(

@@ -76,7 +76,9 @@ def test_prepare_message_for_telegram_can_aggregate_article_info_for_message(art
                       'Количество просмотров: Просмотры  2K\n\n'
     result = prepare_message_for_telegram(articles_fixture)
 
-    assert expected_result == result
+    assert expected_result == result, (
+        f'Expected result: {expected_result} while yours: {result}'
+    )
 
 
 @pytest.mark.parametrize(
