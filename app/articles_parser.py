@@ -25,8 +25,8 @@ def get_habr_articles_html(url: str) -> str:
 
     try:
         response = requests.get(url)
-    except requests.exceptions.RequestException:
-        raise ConnectionError
+    except requests.exceptions.RequestException as exception:
+        raise ConnectionError from exception
 
     html_data = response.text
     return html_data
@@ -69,7 +69,11 @@ def parse_habr_articles_content(html_data: str) -> Union[list, List[Article]]:
             'span', attrs={'class': 'tm-icon-counter tm-data-icons__item'}
         ).get_text()
         new_article = Article.build_from_list(
-            [article_title, f"{config['habr_base_url']}{article_link}", article_votes, article_views]
+            [
+                article_title,
+                f"{config['habr_base_url']}{article_link}",
+                article_votes, article_views
+            ]
         )
         result_articles_list.append(new_article)
 

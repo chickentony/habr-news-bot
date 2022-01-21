@@ -11,6 +11,6 @@ def parse_config(path_to_config_file: str):
     """
     if not isinstance(path_to_config_file, str):
         raise ValueError
-    with open(path_to_config_file, 'r') as file:
+    with open(path_to_config_file, 'r', encoding='utf 8') as file:
         config_data = yaml.safe_load(file)
     return config_data
