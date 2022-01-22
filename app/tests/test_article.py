@@ -143,3 +143,29 @@ def test_create_article_raise_exception_if_not_str_votes_param_provided(votes):
 def test_create_article_raise_exception_if_not_str_views_param_provided(views):
     with pytest.raises(ValueError):
         Article('test title', 'test link', 'test votes', views)
+
+
+def test_prepare_message_for_telegram_return_empty_string_if_empty_arg_provided():
+    expected_result = ''
+
+    result = prepare_message_for_telegram([])
+
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    'articles_list',
+    [
+        pytest.param(123, id='int'),
+        pytest.param(123.0, id='float'),
+        pytest.param('some string', id='string'),
+        pytest.param({}, id='dict'),
+        pytest.param((), id='tuple'),
+        pytest.param(None, id='None'),
+    ]
+)
+def test_prepare_message_for_telegram_raise_exception_if_not_list_views_param_provided(
+        articles_list
+):
+    with pytest.raises(ValueError):
+        prepare_message_for_telegram(articles_list)

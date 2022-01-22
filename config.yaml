@@ -3,3 +3,4 @@ version: 1
 habr_base_url: "https://habr.com"
 habr_articles_about_testing_url: "https://habr.com/ru/hub/it_testing/"
 habr_articles_about_python_url: "https://habr.com/ru/hub/python/"
+habr_articles_search_url: "https://habr.com/ru/search/?q="

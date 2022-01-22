@@ -1,5 +1,7 @@
 FROM python:3.7-slim-buster
 
+ENV TZ='Europe/Moscow'
+
 RUN mkdir -p /usr/src/app/
 WORKDIR /usr/src/app/
 
