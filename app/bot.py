@@ -47,26 +47,41 @@ class ReplayCommandStrategy(BotCommandStrategy):
 
 
 class SearchCommandStrategy(BotCommandStrategy):
+    """Strategy for search articles on habr."""
 
     @classmethod
     def bot_command(cls, update: Update, context: CallbackContext, url: str) -> None:
+        """
+        Command realisation. Takes user query from message with command and search it on habr
+        website. If nothing found send to user corresponding text.
+
+        :param update: telegram.ext Updater class
+        :param context: telegram.ext CallbackContext class
+        :param url: url to habr section
+        """
         empty_search_result_text = 'Ничего не найдено по вашему запросу'
+        empty_user_query_text = 'Укажите поисковый запрос!'
         user_query_words_list = context.args
-        if not user_query_words_list:
-            raise AttributeError
+        if user_query_words_list:
+            user_query = ' '.join(user_query_words_list)
+            search_url = f'{url}{user_query}'
+            html_data = get_habr_articles_html(search_url)
+            articles = parse_habr_articles_content(html_data)
+            message = prepare_message_for_telegram(articles)
 
-        user_query = ' '.join(user_query_words_list)
-        search_url = f'{url}{user_query}'
-        html_data = get_habr_articles_html(search_url)
-        articles = parse_habr_articles_content(html_data)
-        message = prepare_message_for_telegram(articles)
+            if not message:
+                logging.info('Send message with empty search result text')
+                update.message.reply_text(empty_search_result_text)
+            else:
+                logging.info('Send message with articles to user')
+                update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
 
-        if not message:
-            logging.info('Send message with empty search result text')
-            update.message.reply_text(empty_search_result_text)
         else:
-            logging.info('Send message with articles to user')
-            update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+            logging.warning(
+                'User did not pass any query to %s command',
+                config['search_articles_command']
+            )
+            update.message.reply_text(empty_user_query_text)
 
 
 class Bot:
@@ -108,6 +123,7 @@ class Bot:
             '/help - показать это сообщение\n'
             '/get_testing_news - получить список свежих статей про тестирование\n'
             '/get_python_news - получить список свежих статей про python\n'
+            '/search_articles поисковый запрос - поиск стайте на хабре\n'
         )
 
     @staticmethod
@@ -146,6 +162,13 @@ class Bot:
 
     @staticmethod
     def search_articles(update: Update, context: CallbackContext) -> None:
+        """
+        Search articles on habr.
+        Example from habr website: https://habr.com/ru/search/?q=%D1%82%D0%B5%D1%81%D1%82
+
+        :param update: telegram.ext Updater class, required param for command
+        :param context: telegram.ext CallbackContext class, required param for command
+        """
         logging.info('Start parsing habr website for searching articles')
         SearchCommandStrategy.bot_command(
             update,
@@ -157,16 +180,26 @@ class Bot:
     def start_bot(self) -> None:
         """Bot entrypoint. Add all commands and launch bot"""
         logging.info('Starting bot instance...')
-        self.dispatcher.add_handler(CommandHandler('start', self.start_command))
-        self.dispatcher.add_handler(CommandHandler('help', self.help_command))
         self.dispatcher.add_handler(
-            CommandHandler('get_testing_news', self.get_testing_articles)
+            CommandHandler(config['bot_commands']['start_command'], self.start_command)
         )
         self.dispatcher.add_handler(
-            CommandHandler('get_python_news', self.get_python_articles)
+            CommandHandler(config['bot_commands']['help_command'], self.help_command)
         )
         self.dispatcher.add_handler(
-            CommandHandler('search_articles', self.search_articles)
+            CommandHandler(
+                config['bot_commands']['get_testing_news_command'], self.get_testing_articles
+            )
+        )
+        self.dispatcher.add_handler(
+            CommandHandler(
+                config['bot_commands']['get_python_news_command'], self.get_python_articles
+            )
+        )
+        self.dispatcher.add_handler(
+            CommandHandler(
+                config['bot_commands']['search_articles_command'], self.search_articles
+            )
         )
         self.updater.start_polling()
         self.updater.idle()

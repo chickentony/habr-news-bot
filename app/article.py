@@ -54,7 +54,6 @@ class Article:
         articles_votes = article_fields[2]
         articles_views = article_fields[3]
 
-        logging.info('Building article from provided list')
         article = cls(article_title, article_link, articles_votes, articles_views)
         return article
 
