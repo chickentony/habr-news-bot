@@ -11,6 +11,7 @@ build:
 	@docker build -t $(IMAGE_TAG) .
 
 start:
+	make build
 	@echo "Run app container"
 	@docker run -d -e BOT_TOKEN=$(BOT_TOKEN) --rm --name $(CONTAINER_NAME) $(IMAGE_TAG)
 

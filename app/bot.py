@@ -17,7 +17,7 @@ class BotCommandStrategy(ABC):
     """Strategy pattern class for different bot commands"""
 
     @abstractmethod
-    def bot_command(self, update: Update, context: CommandHandler, url: str):
+    def bot_command(self, update: Update, context: CallbackContext, url: str):
         raise NotImplementedError
 
 
@@ -34,10 +34,54 @@ class ReplayCommandStrategy(BotCommandStrategy):
         :param context: telegram.ext CallbackContext class
         :param url: url to habr section
         """
+        empty_search_result_text = 'Статей не найдено'
         html_data = get_habr_articles_html(url)
         articles = parse_habr_articles_content(html_data)
         message = prepare_message_for_telegram(articles)
-        update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+        if not message:
+            logging.info('Send message with empty search result text')
+            update.message.reply_text(empty_search_result_text)
+        else:
+            logging.info('Send message with articles to user')
+            update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+
+
+class SearchCommandStrategy(BotCommandStrategy):
+    """Strategy for search articles on habr."""
+
+    @classmethod
+    def bot_command(cls, update: Update, context: CallbackContext, url: str) -> None:
+        """
+        Command realisation. Takes user query from message with command and search it on habr
+        website. If nothing found send to user corresponding text.
+
+        :param update: telegram.ext Updater class
+        :param context: telegram.ext CallbackContext class
+        :param url: url to habr section
+        """
+        empty_search_result_text = 'Ничего не найдено по вашему запросу'
+        empty_user_query_text = 'Укажите поисковый запрос!'
+        user_query_words_list = context.args
+        if user_query_words_list:
+            user_query = ' '.join(user_query_words_list)
+            search_url = f'{url}{user_query}'
+            html_data = get_habr_articles_html(search_url)
+            articles = parse_habr_articles_content(html_data)
+            message = prepare_message_for_telegram(articles)
+
+            if not message:
+                logging.info('Send message with empty search result text')
+                update.message.reply_text(empty_search_result_text)
+            else:
+                logging.info('Send message with articles to user')
+                update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
+
+        else:
+            logging.warning(
+                'User did not pass any query to %s command',
+                config['search_articles_command']
+            )
+            update.message.reply_text(empty_user_query_text)
 
 
 class Bot:
@@ -49,23 +93,18 @@ class Bot:
 
         :param bot_token: telegram bot token. More info - https://core.telegram.org/bots/api
         """
-        logging.basicConfig(
-            format='%(asctime)s %(name)s %(levelname)s %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S',
-            level=logging.INFO
-        )
-        logging.getLogger(__name__)
         self.updater = Updater(bot_token)
         self.dispatcher = self.updater.dispatcher
 
     @staticmethod
     def start_command(update: Update, _: CallbackContext) -> None:
         """
-        Text replaying on /start command.
+        Text message replaying on /start command.
 
         :param update: telegram.ext Updater class, required param for command
         :param _: telegram.ext CallbackContext class, required param for command
         """
+        logging.info('Subscribe on bot')
         update.message.reply_text(
             'Бот помогает отслеживать свежие новости на HABR.\nСписок доступных команд - /help'
         )
@@ -73,15 +112,18 @@ class Bot:
     @staticmethod
     def help_command(update: Update, _: CallbackContext) -> None:
         """
-        Text replaying on /help command. Contains all possible bot commands and there descriptions.
+        Text message replaying on /help command.
+        Contains all possible bot commands and there descriptions.
 
         :param update: telegram.ext Updater class, required param for command
         :param _: telegram.ext CallbackContext class, required param for command
         """
+        logging.info('Calling "/help" command')
         update.message.reply_text(
             '/help - показать это сообщение\n'
             '/get_testing_news - получить список свежих статей про тестирование\n'
             '/get_python_news - получить список свежих статей про python\n'
+            '/search_articles поисковый запрос - поиск стайте на хабре\n'
         )
 
     @staticmethod
@@ -93,11 +135,13 @@ class Bot:
         :param update: telegram.ext Updater class, required param for command
         :param context: telegram.ext CallbackContext class, required param for command
         """
+        logging.info('Start parsing habr website for testing articles')
         ReplayCommandStrategy.bot_command(
             update,
             context,
             config['habr_articles_about_testing_url']
         )
+        logging.info('Finish parsing habr website')
 
     @staticmethod
     def get_python_articles(update: Update, context: CallbackContext) -> None:
@@ -108,21 +152,54 @@ class Bot:
         :param update: telegram.ext Updater class, required param for command
         :param context: telegram.ext CallbackContext class, required param for command
         """
+        logging.info('Start parsing habr website for python articles')
         ReplayCommandStrategy.bot_command(
             update,
             context,
             config['habr_articles_about_python_url']
         )
+        logging.info('Finish parsing habr website')
+
+    @staticmethod
+    def search_articles(update: Update, context: CallbackContext) -> None:
+        """
+        Search articles on habr.
+        Example from habr website: https://habr.com/ru/search/?q=%D1%82%D0%B5%D1%81%D1%82
+
+        :param update: telegram.ext Updater class, required param for command
+        :param context: telegram.ext CallbackContext class, required param for command
+        """
+        logging.info('Start parsing habr website for searching articles')
+        SearchCommandStrategy.bot_command(
+            update,
+            context,
+            config['habr_articles_search_url']
+        )
+        logging.info('Finish parsing habr website')
 
     def start_bot(self) -> None:
         """Bot entrypoint. Add all commands and launch bot"""
-        self.dispatcher.add_handler(CommandHandler('start', self.start_command))
-        self.dispatcher.add_handler(CommandHandler('help', self.help_command))
+        logging.info('Starting bot instance...')
         self.dispatcher.add_handler(
-            CommandHandler('get_testing_news', self.get_testing_articles)
+            CommandHandler(config['bot_commands']['start_command'], self.start_command)
         )
         self.dispatcher.add_handler(
-            CommandHandler('get_python_news', self.get_python_articles)
+            CommandHandler(config['bot_commands']['help_command'], self.help_command)
+        )
+        self.dispatcher.add_handler(
+            CommandHandler(
+                config['bot_commands']['get_testing_news_command'], self.get_testing_articles
+            )
+        )
+        self.dispatcher.add_handler(
+            CommandHandler(
+                config['bot_commands']['get_python_news_command'], self.get_python_articles
+            )
+        )
+        self.dispatcher.add_handler(
+            CommandHandler(
+                config['bot_commands']['search_articles_command'], self.search_articles
+            )
         )
         self.updater.start_polling()
         self.updater.idle()
